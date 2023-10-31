@@ -4,7 +4,8 @@ package edu.seg2105.edu.server.backend;
 // license found at www.lloseng.com 
 
 
-import ocsf.server.*;
+import edu.seg2105.ocsf.server.AbstractServer;
+import edu.seg2105.ocsf.server.ConnectionToClient;
 
 /**
  * This class overrides some of the methods in the abstract 
