@@ -49,6 +49,9 @@ public class EchoServer extends AbstractServer
   public void handleMessageFromClient
     (Object msg, ConnectionToClient client)
   {
+    if (msg.toString().charAt(0) == '#'){
+      String command = msg.toString().split("#")[1];
+    }
     System.out.println("Message received: " + msg + " from " + client);
     this.sendToAllClients(msg);
   }
@@ -71,6 +74,15 @@ public class EchoServer extends AbstractServer
   {
     System.out.println
       ("Server has stopped listening for connections.");
+  }
+
+  @Override
+  protected void clientConnected(ConnectionToClient client) {
+    System.out.print("Client " + client.getName() + " connected");
+  }
+  @Override
+  synchronized protected void clientDisconnected(ConnectionToClient client) {
+    System.out.print("Client " + client.getName() + " disconnected");
   }
   
   

@@ -9,6 +9,8 @@ import edu.seg2105.ocsf.client.AbstractClient;
 
 import java.io.IOException;
 
+import static java.lang.Integer.parseInt;
+
 /**
  * This class overrides some of the methods defined in the abstract
  * superclass in order to give more functionality to the client.
@@ -27,7 +29,7 @@ public class ChatClient extends AbstractClient
    */
   ChatIF clientUI;
   private final int MAX_ATTEMPTS_AT_RECONNECTION = 5;
-  private final long TIME_TO_WAIT_BETWEEN_ATTEMPTS = 2000; //in ms
+  private final long TIME_TO_WAIT_BETWEEN_ATTEMPTS = 10000; //in ms
 
   
   //Constructors ****************************************************
@@ -65,6 +67,14 @@ public class ChatClient extends AbstractClient
 
   @Override
   protected void connectionClosed(){
+    clientUI.display("Connection closed.");
+
+
+  }
+
+  @Override
+  protected void connectionException(Exception exception) {
+    super.connectionException(exception);
     // First we inform the user, connection was lost.
     clientUI.display("We have lost connection with the server, we will now attempt reconnection.");
     // Then we attempt to reconnect an arbitrary MAX_ATTEMPTS_AT_RECONNECTION times.
@@ -89,7 +99,6 @@ public class ChatClient extends AbstractClient
 
     //Finally we can quit
     quit();
-
   }
 
   /**
@@ -99,6 +108,13 @@ public class ChatClient extends AbstractClient
    */
   public void handleMessageFromClientUI(String message)
   {
+
+      if (message.charAt(0) == '#') {
+        String command = message.substring(1);
+        handleCommand(command);
+        return;
+      }
+
     try
     {
       sendToServer(message);
@@ -110,7 +126,74 @@ public class ChatClient extends AbstractClient
       quit();
     }
   }
-  
+
+  private void handleCommand(String command){
+    String[] fullCommandArr = command.split(" ");
+    String operation = fullCommandArr[0];
+
+    switch (operation) {
+      case "quit":
+        quit();
+        break;
+
+      case "logoff":
+        try {
+          closeConnection();
+        }
+        catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+        break;
+      case "sethost":
+        if (isConnected()){
+          clientUI.display("You cannot set a host if you're already connected, please disconnect first.");
+        }
+        try {
+          setHost(fullCommandArr[2]);
+        } catch (ArrayIndexOutOfBoundsException e){
+          clientUI.display("Please make sure to input a port number in this format, #set hostname");
+        } catch (Exception e){
+          clientUI.display("Something went wrong");
+          e.printStackTrace();
+        }
+        break;
+      case "setport":
+        if (isConnected()){
+          clientUI.display("You cannot set a host if you're already connected, please disconnect first.");
+        }
+        try {
+          setPort(parseInt(fullCommandArr[1]));
+        } catch (NumberFormatException e){
+          clientUI.display("Please make sure to input a valid port number.");
+        } catch (ArrayIndexOutOfBoundsException e){
+          clientUI.display("Please make sure to input a port number in this format, #set port-number");
+        } catch (Exception e){
+          clientUI.display("Something went wrong");
+          e.printStackTrace();
+        }
+        break;
+      case "login":
+        if (isConnected()){
+          clientUI.display("You are already logged in.");
+        }
+        try {
+          openConnection();
+          clientUI.display("You were successfully connected.");
+        } catch (IOException e) {
+          clientUI.display("Connection ot server failed, please try again.");
+        }
+        break;
+      case "gethost":
+        clientUI.display("The current host name in use is : " + getHost());
+        break;
+      case "getport":
+        clientUI.display("The port in is use is: " + getPort());
+        break;
+      default:
+        clientUI.display("This command does not exist.");
+
+    }
+  }
   /**
    * This method terminates the client.
    */

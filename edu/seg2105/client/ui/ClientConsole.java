@@ -3,11 +3,13 @@ package edu.seg2105.client.ui;
 // "Object Oriented Software Engineering" and is issued under the open-source
 // license found at www.lloseng.com 
 
-import java.io.*;
+import edu.seg2105.client.backend.ChatClient;
+import edu.seg2105.client.common.ChatIF;
+
+import java.io.IOException;
 import java.util.Scanner;
 
-import edu.seg2105.client.backend.ChatClient;
-import edu.seg2105.client.common.*;
+import static java.lang.Integer.parseInt;
 
 /**
  * This class constructs the UI for a chat client.  It implements the
@@ -26,6 +28,7 @@ public class ClientConsole implements ChatIF
    * The default port to connect on.
    */
   final public static int DEFAULT_PORT = 5555;
+  public static int PORT_PASSED_BY_USER;
   
   //Instance variables **********************************************
   
@@ -115,21 +118,34 @@ public class ClientConsole implements ChatIF
    *
    * @param args[0] The host to connect to.
    */
-  public static void main(String[] args) 
-  {
+  public static void main(String[] args) {
     String host = "";
+    ClientConsole chat;
 
-
-    try
-    {
+    //First we only care about the first host
+    try {
       host = args[0];
-    }
-    catch(ArrayIndexOutOfBoundsException e)
-    {
+    } catch (ArrayIndexOutOfBoundsException e) {
       host = "localhost";
     }
-    ClientConsole chat= new ClientConsole(host, DEFAULT_PORT);
-    chat.accept();  //Wait for console data
+
+    //Then we check if we were passed a PORT
+    if (args.length >= 2) {
+      try {
+        PORT_PASSED_BY_USER = parseInt(args[1]);
+      } catch (NumberFormatException e) {
+        //If the port passed is not proper, we run here.
+        chat = new ClientConsole(host, DEFAULT_PORT);
+        chat.accept();
+        return;
+      }
+    }
+
+    //If everything went fine start the server.
+
+    chat = new ClientConsole(host, PORT_PASSED_BY_USER);
+    chat.accept();
+    }
   }
-}
+
 //End of ConsoleChat class

@@ -72,7 +72,7 @@ public abstract class AbstractServer implements Runnable
    * The thread group associated with client threads. Each member of the
    * thread group is a <code> ConnectionToClient </code>.
    */
-  private ThreadGroup clientThreadGroup;
+  private final ThreadGroup clientThreadGroup;
 
   /**
    * Indicates if the listening thread is ready to stop.  Set to
@@ -375,8 +375,7 @@ public abstract class AbstractServer implements Runnable
    *
    * @param client the connection with the client.
    */
-  synchronized protected void clientDisconnected(
-    ConnectionToClient client) {}
+  synchronized protected void clientDisconnected(ConnectionToClient client) {}
 
   /**
    * Hook method called each time an exception is thrown in a
