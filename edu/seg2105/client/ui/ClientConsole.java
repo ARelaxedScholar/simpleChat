@@ -5,6 +5,7 @@ package edu.seg2105.client.ui;
 
 import edu.seg2105.client.backend.ChatClient;
 import edu.seg2105.client.common.ChatIF;
+import edu.seg2105.edu.server.backend.EchoServer;
 
 import java.io.IOException;
 import java.util.Scanner;
@@ -29,6 +30,7 @@ public class ClientConsole implements ChatIF
    */
   final public static int DEFAULT_PORT = 5555;
   public static int PORT_PASSED_BY_USER;
+  final String messageFromAdminFlag = EchoServer.getFlagForMessageFromAdmin();
   
   //Instance variables **********************************************
   
@@ -53,11 +55,12 @@ public class ClientConsole implements ChatIF
    * @param host The host to connect to.
    * @param port The port to connect on.
    */
-  public ClientConsole(String host, int port) 
+  public ClientConsole(String id, String host, int port)
   {
     try 
     {
-      client= new ChatClient(host, port, this);
+      client = new ChatClient(id, host, port, this);
+
       
       
     } 
@@ -107,7 +110,11 @@ public class ClientConsole implements ChatIF
    */
   public void display(String message) 
   {
-    System.out.println("> " + message);
+    if (message.startsWith(messageFromAdminFlag)){
+      System.out.println("SERVER MSG> " + message.substring(messageFromAdminFlag.length()));
+      return;
+    }
+    System.out.println(message);
   }
 
   
@@ -119,31 +126,50 @@ public class ClientConsole implements ChatIF
    * @param args[0] The host to connect to.
    */
   public static void main(String[] args) {
-    String host = "";
+    String host = "localhost";
+    String userID = "";
     ClientConsole chat;
+    int portToUse = DEFAULT_PORT;
 
     //First we only care about the first host
-    try {
-      host = args[0];
-    } catch (ArrayIndexOutOfBoundsException e) {
-      host = "localhost";
+    if (!(args.length >= 1)){
+      System.out.println("ERROR - No login ID specified.  Connection aborted.");
+      return;
     }
+    userID = args[0];
 
     //Then we check if we were passed a PORT
     if (args.length >= 2) {
       try {
-        PORT_PASSED_BY_USER = parseInt(args[1]);
-      } catch (NumberFormatException e) {
-        //If the port passed is not proper, we run here.
-        chat = new ClientConsole(host, DEFAULT_PORT);
+        host = args[1];
+      } catch (ArrayIndexOutOfBoundsException e){
+        // If the host arg wasn't passed we don't expect a port either
+        chat = new ClientConsole(userID, host, DEFAULT_PORT);
         chat.accept();
         return;
       }
+
+      //If we didn't run into an exception yet.
+      try {
+        PORT_PASSED_BY_USER = parseInt(args[2]);
+        portToUse = PORT_PASSED_BY_USER;
+      } catch (NumberFormatException e) {
+        //If the port passed is not proper,
+        // We inform the user (since they might want to know and terminate)
+        System.out.println("The port passed wasn't formatted properly, please make sure to (userID, hostname, PORT) in that order.");
+        System.out.println("If you do not know what a hostname or a port are, please do not pass anything. DEFAULTS are set.");
+      }
+      catch (ArrayIndexOutOfBoundsException e){
+        //If simply not passed we use the default.
+        chat = new ClientConsole(userID, host, DEFAULT_PORT);
+        chat.accept();
+        return;
+      }
+
     }
 
     //If everything went fine start the server.
-
-    chat = new ClientConsole(host, PORT_PASSED_BY_USER);
+    chat = new ClientConsole(userID, host, portToUse);
     chat.accept();
     }
   }

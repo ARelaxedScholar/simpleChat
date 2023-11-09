@@ -28,8 +28,10 @@ public class ChatClient extends AbstractClient
    * the display method in the client.
    */
   ChatIF clientUI;
+  String userID;
   private final int MAX_ATTEMPTS_AT_RECONNECTION = 5;
   private final long TIME_TO_WAIT_BETWEEN_ATTEMPTS = 10000; //in ms
+  final static String FLAG_FOR_COMMAND = "#";
 
   
   //Constructors ****************************************************
@@ -42,12 +44,14 @@ public class ChatClient extends AbstractClient
    * @param clientUI The interface type variable.
    */
   
-  public ChatClient(String host, int port, ChatIF clientUI) 
+  public ChatClient(String id, String host, int port, ChatIF clientUI)
     throws IOException 
   {
     super(host, port); //Call the superclass constructor
     this.clientUI = clientUI;
+    this.userID = id;
     openConnection();
+    sendToServer("#login " + userID);
   }
 
   
@@ -61,8 +65,6 @@ public class ChatClient extends AbstractClient
   public void handleMessageFromServer(Object msg) 
   {
     clientUI.display(msg.toString());
-
-
   }
 
   @Override
@@ -109,7 +111,7 @@ public class ChatClient extends AbstractClient
   public void handleMessageFromClientUI(String message)
   {
 
-      if (message.charAt(0) == '#') {
+      if (message.startsWith(FLAG_FOR_COMMAND)) {
         String command = message.substring(1);
         handleCommand(command);
         return;
@@ -125,6 +127,10 @@ public class ChatClient extends AbstractClient
         ("Could not send message to server.  Terminating client.");
       quit();
     }
+  }
+
+  public String getUserID(){
+    return userID;
   }
 
   private void handleCommand(String command){
@@ -173,14 +179,14 @@ public class ChatClient extends AbstractClient
         }
         break;
       case "login":
-        if (isConnected()){
-          clientUI.display("You are already logged in.");
-        }
         try {
+          //Since we want to let the server handle both cases.
+          if (isConnected())
+            sendToServer(FLAG_FOR_COMMAND + command);
           openConnection();
-          clientUI.display("You were successfully connected.");
+          sendToServer(FLAG_FOR_COMMAND + command);
         } catch (IOException e) {
-          clientUI.display("Connection ot server failed, please try again.");
+          clientUI.display("Login request couldn't be sent to server.");
         }
         break;
       case "gethost":

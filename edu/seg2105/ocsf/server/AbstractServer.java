@@ -156,7 +156,7 @@ public abstract class AbstractServer implements Runnable
   {
     if (serverSocket == null)
       return;
-      stopListening();
+    stopListening();
     try
     {
       serverSocket.close();
